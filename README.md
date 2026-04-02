@@ -23,7 +23,7 @@
 
 ## Project Structure
 
-```
+``
 project/
 ├── backend/
 │   ├── db/
