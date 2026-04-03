@@ -1,85 +1,50 @@
 const express = require("express");
 const cors = require("cors");
+const { exec } = require("child_process");
+const path = require("path");
 
-const { getRawData } = require("./db/queries");
-const { cleanData } = require("./utils/cleanData");
-const {
-  topAgent,
-  compareAgents,
-  getTrend,
-  highValueOrders
-} = require("./utils/insights");
+const app = express(); // ✅ IMPORTANT
 
-const app = express();
-
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-/* ---------- ROOT ---------- */
+// Test route
 app.get("/", (req, res) => {
-  res.send("✅ Backend running");
+  res.send("Backend is working 🚀");
 });
 
-/* ---------- AI CHAT ---------- */
-app.post("/api/ask", async (req, res) => {
-  const q = req.body.question.toLowerCase();
+// ML Chat Route
+app.post("/api/ask", (req, res) => {
+  const { question } = req.body;
 
-  try {
-    const raw = await getRawData();
-    const data = cleanData(raw);
+  console.log("User asked:", question);
 
-    // 🟢 TOP AGENT
-    if (q.includes("top") || q.includes("best")) {
-      const [agent, revenue] = topAgent(data);
+  // Extract number (day)
+  const match = question.match(/\d+/);
+  const day = match ? match[0] : 1;
 
-      return res.send({
-        answer: `🏆 ${agent} is the top agent with revenue ₹${revenue}`
-      });
+  // Absolute path to Python script
+  const scriptPath = path.join(__dirname, "ml", "predict.py");
+
+  exec(`python "${scriptPath}" ${day}`, (err, stdout, stderr) => {
+    console.log("STDOUT:", stdout);
+    console.log("STDERR:", stderr);
+
+    if (err) {
+      console.error("ERROR:", err);
+      return res.json({ answer: "❌ ML error" });
     }
 
-    // 🟡 COMPARE
-    if (q.includes("compare")) {
-      const result = compareAgents(data);
+    const result = stdout.trim();
 
-      const text = result
-        .map(([a, r]) => `${a} (₹${r})`)
-        .join(", ");
-
-      return res.send({
-        answer: `📊 Top agents: ${text}`
-      });
-    }
-
-    // 🔵 TREND
-    if (q.includes("trend") || q.includes("growth")) {
-      const trend = getTrend(data);
-
-      return res.send({
-        answer: `📈 Sales trend is ${trend}`
-      });
-    }
-
-    // 🟣 HIGH VALUE
-    if (q.includes("high") || q.includes("large")) {
-      const count = highValueOrders(data);
-
-      return res.send({
-        answer: `💰 There are ${count} high-value orders`
-      });
-    }
-
-    // fallback
-    res.send({
-      answer: "❓ Ask about top agents, trends, comparisons, or high-value orders"
+    res.json({
+      answer: `📊 Predicted revenue for day ${day} is ${result}`
     });
-
-  } catch (err) {
-    console.error(err);
-    res.send({ answer: "⚠️ Error processing data" });
-  }
+  });
 });
 
-/* ---------- SERVER ---------- */
+// Start server
 app.listen(5000, () => {
   console.log("🚀 Server running on http://localhost:5000");
 });

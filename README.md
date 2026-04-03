@@ -53,7 +53,13 @@ project/
 ```bash
 cd D:\project
 ```
+### Install dependencies
 
+```bash
+npm install express cors sqlite3
+
+pip install pandas scikit-learn
+```
 ---
 
 ### 🔹 2. Setup Database
@@ -91,6 +97,13 @@ node backend/db/seed.js
 
 Inserts data into SQLite
 
+### Train the model
+
+```bash
+cd ml
+python train.py
+```
+
 ---
 
 ### 🔹 5. Start Backend
@@ -111,8 +124,8 @@ http://localhost:5000
 
 ```bash
 cd frontend
-npm install
-npm start
+
+npm run dev
 ```
 
 Runs on:

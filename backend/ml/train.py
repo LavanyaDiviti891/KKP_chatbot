@@ -3,7 +3,8 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression
 import pickle
 
-conn = sqlite3.connect("../db/sales.db")
+conn = sqlite3.connect("../db/database.db")
+
 df = pd.read_sql_query("SELECT day, revenue FROM sales", conn)
 
 X = df[["day"]]

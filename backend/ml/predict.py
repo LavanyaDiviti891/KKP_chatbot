@@ -1,8 +1,15 @@
+import sys
 import pickle
+import os
 
-model = pickle.load(open("model.pkl", "rb"))
+# correct path to model
+base_dir = os.path.dirname(__file__)
+model_path = os.path.join(base_dir, "model.pkl")
 
-# Predict for next day (31)
-prediction = model.predict([[31]])
+model = pickle.load(open(model_path, "rb"))
 
-print(round(prediction[0], 2))
+day = int(sys.argv[1])
+
+prediction = model.predict([[day]])
+
+print(prediction[0])
