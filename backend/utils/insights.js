@@ -1,10 +1,8 @@
-// backend/utils/insights.js
-
 function topAgent(data) {
   const map = {};
 
   data.forEach(d => {
-    map[d.agent] = (map[d.agent] || 0) + d.revenue;
+    map[d.agentName] = (map[d.agentName] || 0) + d.revenue;
   });
 
   return Object.entries(map).sort((a, b) => b[1] - a[1])[0];
@@ -14,7 +12,7 @@ function compareAgents(data) {
   const map = {};
 
   data.forEach(d => {
-    map[d.agent] = (map[d.agent] || 0) + d.revenue;
+    map[d.agentName] = (map[d.agentName] || 0) + d.revenue;
   });
 
   return Object.entries(map)
@@ -23,23 +21,55 @@ function compareAgents(data) {
 }
 
 function getTrend(data) {
-  const sorted = [...data].sort((a, b) => a.day - b.day);
+  const sorted = data.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-  const first = sorted[0].revenue;
-  const last = sorted[sorted.length - 1].revenue;
+  const first = sorted[0]?.revenue || 0;
+  const last = sorted[sorted.length - 1]?.revenue || 0;
 
-  if (last > first) return "increasing";
-  if (last < first) return "decreasing";
-  return "stable";
+  return last > first ? "increasing 📈" : "decreasing 📉";
 }
 
 function highValueOrders(data) {
   return data.filter(d => d.revenue > 50000).length;
 }
 
+function highestSalesDay(data) {
+  if (!data || data.length === 0) return null;
+
+  const map = {};
+
+  data.forEach(d => {
+    if (!d.day || !d.revenue) return;
+    map[d.day] = (map[d.day] || 0) + d.revenue;
+  });
+
+  const entries = Object.entries(map);
+  if (entries.length === 0) return null;
+
+  return entries.sort((a, b) => b[1] - a[1])[0];
+}
+
+function lowestSalesDay(data) {
+  if (!data || data.length === 0) return null;
+
+  const map = {};
+
+  data.forEach(d => {
+    if (!d.day || !d.revenue) return;
+    map[d.day] = (map[d.day] || 0) + d.revenue;
+  });
+
+  const entries = Object.entries(map);
+  if (entries.length === 0) return null;
+
+  return entries.sort((a, b) => a[1] - b[1])[0];
+}
+
 module.exports = {
   topAgent,
   compareAgents,
   getTrend,
-  highValueOrders
+  highValueOrders,
+  highestSalesDay,
+  lowestSalesDay
 };

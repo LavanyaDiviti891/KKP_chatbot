@@ -22,27 +22,13 @@ function cleanQuality(q) {
 
 function cleanData(data) {
   return data
-    .filter(d => d.rate !== null && d.quantity)
-    .map(d => {
-      const dateObj = new Date(d.date);
-
-      return {
-        date: d.date,
-        day: dateObj.getDate(),
-        month: dateObj.getMonth() + 1,
-
-        agent: normalizeAgent(d.agentName),
-        customer: d.customerName?.toLowerCase(),
-
-        quantity: d.quantity,
-        rate: d.rate,
-        revenue: d.quantity * d.rate,
-
-        status: d.status,
-        quality: cleanQuality(d.quality),
-        weave: d.weave
-      };
-    });
+    .filter(d => d.quantity && d.rate)
+    .map(d => ({
+      ...d,
+      agentName: d.agentName || "Unknown",
+      day: new Date(d.date).getDate(),
+      revenue: Number(d.quantity) * Number(d.rate)
+    }));
 }
 
 module.exports = { cleanData };

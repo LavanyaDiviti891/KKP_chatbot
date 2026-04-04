@@ -1,11 +1,23 @@
 const sqlite3 = require("sqlite3").verbose();
-const db = new sqlite3.Database("./backend/db/sales.db");
+const path = require("path");
 
-exports.getRawData = () => {
+const dbPath = path.join(__dirname, "sales.db");
+
+const db = new sqlite3.Database(dbPath, (err) => {
+  if (err) {
+    console.error("DB ERROR:", err.message);
+  } else {
+    console.log("✅ Connected to sales.db");
+  }
+});
+
+function getRawData() {
   return new Promise((resolve, reject) => {
-    db.all(`SELECT * FROM sales`, (err, rows) => {
+    db.all("SELECT * FROM sales", [], (err, rows) => {
       if (err) reject(err);
       else resolve(rows);
     });
   });
-};
+}
+
+module.exports = { getRawData };
