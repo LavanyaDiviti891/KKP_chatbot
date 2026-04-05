@@ -1,3 +1,14 @@
+function groupByDay(data) {
+  const map = {};
+
+  data.forEach(d => {
+    if (!d.day) return;
+    map[d.day] = (map[d.day] || 0) + d.revenue;
+  });
+
+  return map;
+}
+
 function topAgent(data) {
   const map = {};
 
@@ -21,10 +32,14 @@ function compareAgents(data) {
 }
 
 function getTrend(data) {
-  const sorted = data.sort((a, b) => new Date(a.date) - new Date(b.date));
+  if (!data.length) return "no data";
 
-  const first = sorted[0]?.revenue || 0;
-  const last = sorted[sorted.length - 1]?.revenue || 0;
+  const sorted = [...data].sort(
+    (a, b) => new Date(a.date) - new Date(b.date)
+  );
+
+  const first = sorted[0].revenue;
+  const last = sorted[sorted.length - 1].revenue;
 
   return last > first ? "increasing 📈" : "decreasing 📉";
 }
@@ -34,33 +49,19 @@ function highValueOrders(data) {
 }
 
 function highestSalesDay(data) {
-  if (!data || data.length === 0) return null;
-
-  const map = {};
-
-  data.forEach(d => {
-    if (!d.day || !d.revenue) return;
-    map[d.day] = (map[d.day] || 0) + d.revenue;
-  });
+  const map = groupByDay(data);
 
   const entries = Object.entries(map);
-  if (entries.length === 0) return null;
+  if (!entries.length) return null;
 
   return entries.sort((a, b) => b[1] - a[1])[0];
 }
 
 function lowestSalesDay(data) {
-  if (!data || data.length === 0) return null;
-
-  const map = {};
-
-  data.forEach(d => {
-    if (!d.day || !d.revenue) return;
-    map[d.day] = (map[d.day] || 0) + d.revenue;
-  });
+  const map = groupByDay(data);
 
   const entries = Object.entries(map);
-  if (entries.length === 0) return null;
+  if (!entries.length) return null;
 
   return entries.sort((a, b) => a[1] - b[1])[0];
 }
