@@ -2,127 +2,83 @@ const express = require("express");
 const cors = require("cors");
 
 const app = express();
-
 app.use(cors());
 app.use(express.json());
 
-const { detectIntent } = require("./utils/intent");
-const { runPrediction } = require("./utils/pythonRunner");
+console.log("🔥 CLEAN SERVER RUNNING (API MODE)");
+
+// 🔹 Import modules
+const { fetchAPIData } = require("./utils/apiService");
 
 const {
+  highestSalesDay,
+  lowestSalesDay,
   topAgent,
   compareAgents,
   getTrend,
-  highValueOrders,
-  highestSalesDay,
-  lowestSalesDay
+  highValueOrders
 } = require("./utils/insights");
 
-const { getRawData } = require("./db/queries");
-const { cleanData } = require("./utils/cleanData");
+const {
+  detectIntent,
+  extractEntities,
+  generateResponse
+} = require("./utils/aiEngine");
 
+// 🔹 Root check
 app.get("/", (req, res) => {
-  res.send("✅ Backend running");
+  res.send("✅ Backend running (API mode)");
 });
 
+// 🔹 Main chatbot endpoint
 app.post("/api/ask", async (req, res) => {
-  const q = (req.body.question || "").toLowerCase();
-
-  console.log("QUESTION:", q);
-
   try {
-    const raw = await getRawData();
-    console.log("RAW LENGTH:", raw.length);
+    const q = (req.body.question || "").toLowerCase();
 
-    const data = cleanData(raw);
-    console.log("CLEAN SAMPLE:", data[0]);
+    console.log("QUESTION:", q);
 
+    // 🔥 STEP 1: Fetch API data
+    const raw = await fetchAPIData();
+
+    console.log("RAW DATA LENGTH:", raw.length);
+
+    // 🔥 STEP 2: Clean data (IMPORTANT FIX)
+    const data = (raw || [])
+  .filter(item => item.rate !== null && item.rate !== 0) // 🔥 IMPORTANT
+  .map((item, i) => ({
+    day: i + 1,
+    revenue: item.quantity * item.rate,
+    agent: item.agentName || "Unknown"
+
+    
+  }));
+
+    // 🔥 STEP 3: AI understanding
     const intent = detectIntent(q);
+    const entities = extractEntities(q);
+
     console.log("INTENT:", intent);
+    console.log("ENTITIES:", entities);
 
-    switch (intent) {
+    // 🔥 STEP 4: Generate response
+    const answer = generateResponse(intent, data, entities, {
+      highestSalesDay,
+      lowestSalesDay,
+      topAgent,
+      compareAgents,
+      getTrend,
+      highValueOrders
+    });
 
-      case "PREDICT": {
-        const match = q.match(/\d+/);
-        const day = match ? parseInt(match[0]) : 1;
-
-        const pred = await runPrediction(day);
-
-        return res.send({
-          answer: `📊 Predicted revenue for day ${day} is ₹${pred.toFixed(2)}`
-        });
-      }
-
-      case "HIGHEST_DAY": {
-        const result = highestSalesDay(data);
-        if (!result) return res.send({ answer: "No data available" });
-
-        const [day, value] = result;
-
-        return res.send({
-          answer: `📈 Day ${day} had the highest sales with ₹${value.toFixed(2)}`
-        });
-      }
-
-      case "LOWEST_DAY": {
-        const result = lowestSalesDay(data);
-        if (!result) return res.send({ answer: "No data available" });
-
-        const [day, value] = result;
-
-        return res.send({
-          answer: `📉 Day ${day} had the lowest sales with ₹${value.toFixed(2)}`
-        });
-      }
-
-      case "TOP_AGENT": {
-        const [agent, revenue] = topAgent(data);
-
-        return res.send({
-          answer: `🏆 ${agent} is the top agent with ₹${revenue.toFixed(2)}`
-        });
-      }
-
-      case "COMPARE": {
-        const result = compareAgents(data);
-
-        const text = result
-          .map(([a, r]) => `${a} (₹${r.toFixed(2)})`)
-          .join(", ");
-
-        return res.send({
-          answer: `📊 Top agents: ${text}`
-        });
-      }
-
-      case "TREND": {
-        const trend = getTrend(data);
-
-        return res.send({
-          answer: `📈 Sales trend is ${trend}`
-        });
-      }
-
-      case "HIGH_VALUE": {
-        const count = highValueOrders(data);
-
-        return res.send({
-          answer: `💰 ${count} high-value orders found`
-        });
-      }
-
-      default:
-        return res.send({
-          answer: "❓ Try asking about top agents, trends, or predictions"
-        });
-    }
+    res.json({ answer });
 
   } catch (err) {
-    console.error("ERROR:", err);
-    res.send({ answer: "⚠️ Error processing request" });
+    console.error("❌ ERROR:", err);
+    res.json({ answer: "⚠️ Error processing request" });
   }
 });
 
+// 🔹 Start server
 app.listen(5000, () => {
-  console.log("🚀 Server running on http://localhost:5000");
+  console.log("🚀 Server running on http://127.0.0.1:5000");
 });

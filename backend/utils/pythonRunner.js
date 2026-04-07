@@ -9,10 +9,7 @@ function runPrediction(day) {
       if (stderr) return reject(stderr);
 
       const result = parseFloat(stdout.trim());
-
-      if (isNaN(result)) {
-        return reject("Invalid output from Python");
-      }
+      if (isNaN(result)) return reject("Invalid output");
 
       resolve(result);
     });

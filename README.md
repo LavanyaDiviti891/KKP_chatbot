@@ -1,215 +1,191 @@
-# AI-Powered Sales Intelligence Chat System
+#  KKP Chatbot – Hybrid AI + API-Based Sales Analytics
 
-##  Features
+This project is a **Hybrid AI Chatbot** that answers natural language questions about sales data using:
 
-* Chat-based interface (React)
-* Real-time data insights from database
-* Data cleaning & preprocessing layer
-* Rule-based intelligence engine
-* Trend analysis & aggregation
-* Revenue-based analytics
-* Fully local (no API keys required)
+* API-based data (no database required)
+* Hybrid NLP (rule-based + similarity matching)
+* Analytics (sales, agents, trends, forecasting)
 
 ---
 
-## Tech Stack
+# Project Structure
 
-* **Frontend:** React (Create React App)
-* **Backend:** Node.js + Express
-* **Database:** SQLite
-* **Language:** JavaScript
-
----
-
-## Project Structure
-
-``
-project/
-├── backend/
-│   ├── db/
-│   │   ├── setup.js       # Creates database schema
-│   │   ├── seed.js        # Inserts dataset into DB
-│   │   ├── sales.db       # SQLite database
-│   │   └── queries.js     # DB access functions
-│   ├── utils/
-│   │   ├── cleanData.js   # Data cleaning & transformation
-│   │   └── insights.js    # Business logic & analytics
-│   ├── data/
-│   │   └── data.json      # Raw dataset
-│   └── server.js          # Express server
+```
+KKP_chatbot/
 │
-├── frontend/
+├── apiServer.js              # Mock API (data provider)
+├── backend/
+│   ├── server.js            # Main backend server
+│   └── utils/
+│       ├── apiService.js    # Fetch API data
+│       ├── aiEngine.js      # NLP + chatbot logic
+│       └── insights.js      # Analytics functions
+│
+├── frontend/                # React frontend (Vite)
 │   ├── src/
-│   │   └── App.js         # Chat UI
 │   └── package.json
+│
+├── package.json             # Backend dependencies
+└── .gitignore
 ```
 
 ---
 
-## Setup Instructions
+# How It Works
 
-### 1. Clone / Navigate to Project
-
-```bash
-cd D:\project
 ```
-### Install dependencies
-
-```bash
-npm install express cors sqlite3
-
-pip install pandas scikit-learn
+Frontend → Backend → API → Data → AI Engine → Response
 ```
----
 
-### 🔹 2. Setup Database
-
-```bash
-node backend/db/setup.js
-```
- Creates the `sales` table
+1. User asks a question
+2. Backend fetches data from API
+3. AI engine detects intent
+4. Insights are computed
+5. Response is returned
 
 ---
 
-### 🔹 3. Add Dataset
+# Setup Instructions
 
-Place your dataset here:
+---
+
+## 1. Clone the Repository
 
 ```
-backend/data/data.json
-```
-
-Expected format:
-
-```json
-{
-  "formData": [ ... ]
-}
+git clone <your-repo-url>
+cd KKP_chatbot
 ```
 
 ---
 
-### 🔹 4. Seed Database
+##  2. Install Backend Dependencies
 
-```bash
-node backend/db/seed.js
 ```
-
-Inserts data into SQLite
-
-### Train the model
-
-```bash
-cd ml
-python train.py
+npm install
 ```
 
 ---
 
-### 🔹 5. Start Backend
+## 3. Install Frontend Dependencies
 
-```bash
+```
+cd frontend
+npm install
+```
+
+---
+
+# Running the Project
+
+ You must run **3 servers simultaneously**
+
+---
+
+##  Terminal 1 – Run API Server
+
+```
+node apiServer.js
+```
+
+Expected:
+
+```
+API running on http://127.0.0.1:4000/data
+```
+
+---
+
+## Terminal 2 – Run Backend
+
+```
 node backend/server.js
 ```
 
-Runs on:
+Expected:
 
 ```
-http://localhost:5000
+Server running on http://127.0.0.1:5000
 ```
 
 ---
 
-### 🔹 6. Start Frontend
+## Terminal 3 – Run Frontend
 
-```bash
+```
 cd frontend
-
 npm run dev
 ```
 
-Runs on:
+Open in browser:
 
 ```
-http://localhost:3000
-```
-
----
-
-## Usage
-
-Open the frontend and ask questions like:
-
-* `top agent`
-* `compare agents`
-* `sales trend`
-* `high value orders`
-
----
-
-## How It Works
-
-```
-User Input (Chat)
-        ↓
-React Frontend
-        ↓
-POST /api/ask
-        ↓
-Node Backend
-        ↓
-SQLite Database
-        ↓
-Data Cleaning Layer
-        ↓
-Insight Engine (Aggregation + Logic)
-        ↓
-Response to Chat UI
+http://localhost:5173/
 ```
 
 ---
 
-## Data Processing
+#  Example Questions
 
-* Removes invalid rows (null rate/quantity)
-* Normalizes agent names
-* Computes:
+### Sales
 
-  * Revenue = quantity × rate
-* Extracts:
+* which day had highest sales
+* best sales day
+* worst day
 
-  * Day, month for trend analysis
+###  Agents
 
----
+* who is best agent
+* top performer
 
-## Supported Queries
+###  Trends
 
-| Query Type | Example             |
-| ---------- | ------------------- |
-| Top Agent  | "top agent"         |
-| Comparison | "compare agents"    |
-| Trend      | "sales trend"       |
-| High Value | "high value orders" |
+* what is the sales trend
+* is business growing
 
----
+###  Forecast
 
-## Notes
+* forecast revenue for 3
+* predict next 5 days
 
-* Works completely offline (no API keys)
-* Insights depend on dataset size
-* More data → better insights
+###  High Value
+
+* show high value orders
 
 ---
 
-## Conclusion
+#  Features
 
-This project demonstrates how to build a **data-driven AI chat system** using:
+* Handles different question variations
+* Extracts numbers (e.g., forecast days)
+* Works without database (API-driven)
+* Handles null/invalid data safely
+* Lightweight NLP (no heavy ML required)
 
-* Database queries
-* Data transformation
-* Business logic
-* Interactive UI
+---
 
-Without relying on external AI APIs.
+
+
+##  node_modules is NOT included
+
+After cloning, ALWAYS run:
+
+```
+npm install
+cd frontend && npm install
+```
+
+---
+
+# Summary
+
+This project demonstrates:
+
+```
+Hybrid AI Chatbot + API Integration + Sales Analytics
+```
+
+A clean, scalable approach used in real-world systems 
+
+---
 
 
