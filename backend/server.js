@@ -2,182 +2,83 @@ const express = require("express");
 const cors = require("cors");
 
 const app = express();
-
-/* ---------- MIDDLEWARE ---------- */
 app.use(cors());
 app.use(express.json());
 
-/* ---------- IMPORTS ---------- */
-const { detectIntent } = require("./utils/intent");
-const { runPrediction } = require("./utils/pythonRunner");
+console.log("🔥 CLEAN SERVER RUNNING (API MODE)");
+
+// 🔹 Import modules
+const { fetchAPIData } = require("./utils/apiService");
 
 const {
+  highestSalesDay,
+  lowestSalesDay,
   topAgent,
   compareAgents,
   getTrend,
-  highValueOrders,
-  highestSalesDay,
-  lowestSalesDay
+  highValueOrders
 } = require("./utils/insights");
 
-const { cleanData } = require("./utils/cleanData");
-const { getRawData } = require("./db/queries");
+const {
+  detectIntent,
+  extractEntities,
+  generateResponse
+} = require("./utils/aiEngine");
 
-/* ---------- HEALTH CHECK ---------- */
+// 🔹 Root check
 app.get("/", (req, res) => {
-  console.log("✅ ROOT HIT");
-  res.status(200).send("Backend working ✅");
+  res.send("✅ Backend running (API mode)");
 });
 
-/* ---------- DEBUG ROUTE (VERY IMPORTANT) ---------- */
-app.get("/api/test", async (req, res) => {
-  try {
-    const raw = await getRawData();
-
-    console.log("RAW DATA LENGTH:", raw?.length);
-
-    return res.json({
-      success: true,
-      count: raw.length,
-      sample: raw[0] || null
-    });
-
-  } catch (err) {
-    console.error("TEST ERROR:", err);
-    res.status(500).json({ error: "DB ERROR" });
-  }
-});
-
-/* ---------- MAIN CHAT API ---------- */
+// 🔹 Main chatbot endpoint
 app.post("/api/ask", async (req, res) => {
-  const q = (req.body.question || "").toLowerCase();
-
-  console.log("QUESTION:", q);
-
   try {
-    /* ---- FETCH DATA ---- */
-    let raw;
-    try {
-      raw = await getRawData();
-    } catch (dbErr) {
-      console.error("DB ERROR:", dbErr);
-      return res.status(500).send({
-        answer: "Database error"
-      });
-    }
+    const q = (req.body.question || "").toLowerCase();
 
-    if (!raw || raw.length === 0) {
-      return res.send({
-        answer: "No data available"
-      });
-    }
+    console.log("QUESTION:", q);
 
-    /* ---- CLEAN DATA ---- */
-    const data = cleanData(raw);
+    // 🔥 STEP 1: Fetch API data
+    const raw = await fetchAPIData();
 
-    console.log("CLEAN DATA LENGTH:", data.length);
+    console.log("RAW DATA LENGTH:", raw.length);
 
-    /* ---- DETECT INTENT ---- */
+    // 🔥 STEP 2: Clean data (IMPORTANT FIX)
+    const data = (raw || [])
+  .filter(item => item.rate !== null && item.rate !== 0) // 🔥 IMPORTANT
+  .map((item, i) => ({
+    day: i + 1,
+    revenue: item.quantity * item.rate,
+    agent: item.agentName || "Unknown"
+
+    
+  }));
+
+    // 🔥 STEP 3: AI understanding
     const intent = detectIntent(q);
+    const entities = extractEntities(q);
+
     console.log("INTENT:", intent);
+    console.log("ENTITIES:", entities);
 
-    /* ---- HANDLE INTENTS ---- */
-    switch (intent) {
+    // 🔥 STEP 4: Generate response
+    const answer = generateResponse(intent, data, entities, {
+      highestSalesDay,
+      lowestSalesDay,
+      topAgent,
+      compareAgents,
+      getTrend,
+      highValueOrders
+    });
 
-      case "PREDICT": {
-        const match = q.match(/\d+/);
-        const day = match ? parseInt(match[0]) : 1;
-
-        try {
-          const pred = await runPrediction(day);
-
-          return res.send({
-            answer: `Predicted revenue for day ${day} is ${pred.toFixed(2)}`
-          });
-        } catch (err) {
-          console.error("PREDICT ERROR:", err);
-          return res.send({
-            answer: "Prediction failed"
-          });
-        }
-      }
-
-      case "HIGHEST_DAY": {
-        const result = highestSalesDay(data);
-        if (!result) return res.send({ answer: "No data found" });
-
-        const [day, value] = result;
-
-        return res.send({
-          answer: `Day ${day} had highest sales ${value.toFixed(2)}`
-        });
-      }
-
-      case "LOWEST_DAY": {
-        const result = lowestSalesDay(data);
-        if (!result) return res.send({ answer: "No data found" });
-
-        const [day, value] = result;
-
-        return res.send({
-          answer: `Day ${day} had lowest sales ${value.toFixed(2)}`
-        });
-      }
-
-      case "TOP_AGENT": {
-        const result = topAgent(data);
-        if (!result) return res.send({ answer: "No data found" });
-
-        const [agent, revenue] = result;
-
-        return res.send({
-          answer: `${agent} is top agent with ${revenue.toFixed(2)}`
-        });
-      }
-
-      case "COMPARE": {
-        const result = compareAgents(data);
-
-        const text = result
-          .map(([a, r]) => `${a} (${r.toFixed(2)})`)
-          .join(", ");
-
-        return res.send({
-          answer: `Top agents: ${text}`
-        });
-      }
-
-      case "TREND": {
-        const trend = getTrend(data);
-
-        return res.send({
-          answer: `Sales trend is ${trend}`
-        });
-      }
-
-      case "HIGH_VALUE": {
-        const count = highValueOrders(data);
-
-        return res.send({
-          answer: `${count} high-value orders found`
-        });
-      }
-
-      default:
-        return res.send({
-          answer: "Ask about sales, agents, trends, or predictions"
-        });
-    }
+    res.json({ answer });
 
   } catch (err) {
-    console.error("SERVER ERROR:", err);
-    res.status(500).send({
-      answer: "Server error"
-    });
+    console.error("❌ ERROR:", err);
+    res.json({ answer: "⚠️ Error processing request" });
   }
 });
 
-/* ---------- START SERVER ---------- */
-app.listen(5000, "127.0.0.1", () => {
+// 🔹 Start server
+app.listen(5000, () => {
   console.log("🚀 Server running on http://127.0.0.1:5000");
 });

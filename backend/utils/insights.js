@@ -1,76 +1,82 @@
-function groupByDay(data) {
-  const map = {};
-
-  data.forEach(d => {
-    if (!d.day) return;
-    map[d.day] = (map[d.day] || 0) + d.revenue;
-  });
-
-  return map;
-}
-
-function topAgent(data) {
-  const map = {};
-
-  data.forEach(d => {
-    map[d.agentName] = (map[d.agentName] || 0) + d.revenue;
-  });
-
-  return Object.entries(map).sort((a, b) => b[1] - a[1])[0];
-}
-
-function compareAgents(data) {
-  const map = {};
-
-  data.forEach(d => {
-    map[d.agentName] = (map[d.agentName] || 0) + d.revenue;
-  });
-
-  return Object.entries(map)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3);
-}
-
-function getTrend(data) {
-  if (!data.length) return "no data";
-
-  const sorted = [...data].sort(
-    (a, b) => new Date(a.date) - new Date(b.date)
-  );
-
-  const first = sorted[0].revenue;
-  const last = sorted[sorted.length - 1].revenue;
-
-  return last > first ? "increasing 📈" : "decreasing 📉";
-}
-
-function highValueOrders(data) {
-  return data.filter(d => d.revenue > 50000).length;
-}
+// 🔥 SAFE INSIGHTS FUNCTIONS
 
 function highestSalesDay(data) {
-  const map = groupByDay(data);
+  if (!data.length) return { day: "-", revenue: 0 };
 
-  const entries = Object.entries(map);
-  if (!entries.length) return null;
+  let max = data[0];
 
-  return entries.sort((a, b) => b[1] - a[1])[0];
+  data.forEach(d => {
+    if (d.revenue > max.revenue) max = d;
+  });
+
+  return max;
 }
 
 function lowestSalesDay(data) {
-  const map = groupByDay(data);
+  if (!data.length) return { day: "-", revenue: 0 };
 
-  const entries = Object.entries(map);
-  if (!entries.length) return null;
+  let min = data[0];
 
-  return entries.sort((a, b) => a[1] - b[1])[0];
+  data.forEach(d => {
+    if (d.revenue < min.revenue) min = d;
+  });
+
+  return min;
+}
+
+function topAgent(data) {
+  if (!data.length) return { agent: "-", revenue: 0 };
+
+  const agentMap = {};
+
+  data.forEach(d => {
+    agentMap[d.agent] = (agentMap[d.agent] || 0) + d.revenue;
+  });
+
+  let top = { agent: "-", revenue: 0 };
+
+  for (let agent in agentMap) {
+    if (agentMap[agent] > top.revenue) {
+      top = { agent, revenue: agentMap[agent] };
+    }
+  }
+
+  return top;
+}
+
+function getTrend(data) {
+  if (data.length < 2) return "Not enough data";
+
+  const first = data[0].revenue;
+  const last = data[data.length - 1].revenue;
+
+  if (last > first) return "increasing 📈";
+  if (last < first) return "decreasing 📉";
+  return "stable";
+}
+
+function highValueOrders(data) {
+  return data.filter(d => d.revenue > 100000);
+}
+
+function compareAgents(data, a1, a2) {
+  const sum = {};
+
+  data.forEach(d => {
+    sum[d.agent] = (sum[d.agent] || 0) + d.revenue;
+  });
+
+  return {
+    [a1]: sum[a1] || 0,
+    [a2]: sum[a2] || 0
+  };
 }
 
 module.exports = {
+  highestSalesDay,
+  lowestSalesDay,
   topAgent,
-  compareAgents,
   getTrend,
   highValueOrders,
-  highestSalesDay,
-  lowestSalesDay
+  compareAgents
 };
