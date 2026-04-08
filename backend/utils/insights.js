@@ -1,5 +1,3 @@
-// 🔥 SAFE INSIGHTS FUNCTIONS
-
 function highestSalesDay(data) {
   if (!data.length) return { day: "-", revenue: 0 };
 
@@ -50,8 +48,8 @@ function getTrend(data) {
   const first = data[0].revenue;
   const last = data[data.length - 1].revenue;
 
-  if (last > first) return "increasing 📈";
-  if (last < first) return "decreasing 📉";
+  if (last > first) return "increasing ";
+  if (last < first) return "decreasing ";
   return "stable";
 }
 
@@ -71,7 +69,21 @@ function compareAgents(data, a1, a2) {
     [a2]: sum[a2] || 0
   };
 }
+function highestSalesDay(data) {
+  if (!data || data.length === 0) return [0, 0];
 
+  let max = -Infinity;
+  let bestDay = null;
+
+  data.forEach(d => {
+    if (d.revenue > max) {
+      max = d.revenue;
+      bestDay = d.date;
+    }
+  });
+
+  return [bestDay, max];
+}
 module.exports = {
   highestSalesDay,
   lowestSalesDay,

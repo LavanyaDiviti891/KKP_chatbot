@@ -1,168 +1,116 @@
-// 🔥 HYBRID AI ENGINE (Rule + NLP)
+const stringSimilarity = require("string-similarity");
 
-// -----------------------------
-// 🧠 INTENT DEFINITIONS
-// -----------------------------
-const intents = [
-  {
-    name: "highest_sales",
-    patterns: [
-      "highest sales",
-      "max sales",
-      "top sales day",
-      "which day sold most",
-      "best day"
-    ]
-  },
-  {
-    name: "lowest_sales",
-    patterns: [
-      "lowest sales",
-      "minimum sales",
-      "worst day"
-    ]
-  },
-  {
-    name: "top_agent",
-    patterns: [
-      "top agent",
-      "best agent",
-      "who sold most",
-      "highest performer"
-    ]
-  },
-  {
-    name: "trend",
-    patterns: [
-      "trend",
-      "sales trend",
-      "increase or decrease",
-      "growth"
-    ]
-  },
-  {
-    name: "forecast",
-    patterns: [
-      "forecast",
-      "predict",
-      "future sales",
-      "next days",
-      "prediction"
-    ]
-  },
-  {
-    name: "high_value",
-    patterns: [
-      "high value",
-      "big orders",
-      "large sales"
-    ]
+const intents = {
+  HIGHEST_DAY: [
+    "highest sales",
+    "best day",
+    "top day",
+    "maximum revenue",
+    "best sales day",
+    "which day performed best"
+  ],
+
+  LOWEST_DAY: [
+    "lowest sales",
+    "worst day",
+    "minimum sales",
+    "least revenue"
+  ],
+
+  TOP_AGENT: [
+    "top agent",
+    "best agent",
+    "highest performing agent"
+  ],
+
+  COMPARE: [
+    "compare agents",
+    "agent comparison",
+    "list top agents",
+    "who are best agents",
+    "show agent performance"
+  ],
+
+  TREND: [
+    "sales trend",
+    "trend",
+    "is sales increasing",
+    "growth trend"
+  ],
+
+  HIGH_VALUE: [
+    "high value orders",
+    "expensive orders",
+    "big orders"
+  ],
+
+  CONFIRMED_ORDERS: [
+    "confirmed orders",
+    "how many confirmed",
+    "count confirmed orders"
+  ]
+};
+
+function detectIntent(q) {
+  q = q.toLowerCase();
+
+  if (q.includes("best") || q.includes("highest") || q.includes("top")) {
+    return "HIGHEST_DAY";
   }
-];
 
-// -----------------------------
-// 🧠 TEXT CLEANING
-// -----------------------------
-function cleanText(text) {
-  return text
-    .toLowerCase()
-    .replace(/[^\w\s]/g, "")
-    .trim();
-}
+  if (q.includes("lowest") || q.includes("least") || q.includes("worst")) {
+    return "LOWEST_DAY";
+  }
 
-// -----------------------------
-// 🧠 SIMPLE SIMILARITY (Jaccard)
-// -----------------------------
-function similarity(a, b) {
-  const setA = new Set(a.split(" "));
-  const setB = new Set(b.split(" "));
-  const intersection = [...setA].filter(x => setB.has(x));
-  return intersection.length / (setA.size + setB.size - intersection.length);
-}
+  if (q.includes("compare")) {
+    return "COMPARE";
+  }
 
-// -----------------------------
-// 🧠 DETECT INTENT (HYBRID)
-// -----------------------------
-function detectIntent(question) {
-  const q = cleanText(question);
+  if (q.includes("trend")) {
+    return "TREND";
+  }
 
-  let bestIntent = "unknown";
+  if (q.includes("agent")) {
+    return "TOP_AGENT";
+  }
+
+  if (q.includes("confirmed")) {
+    return "CONFIRMED_ORDERS";
+  }
+
+
+  let bestIntent = "UNKNOWN";
   let bestScore = 0;
 
-  intents.forEach(intent => {
-    intent.patterns.forEach(pattern => {
-      const score = similarity(q, pattern);
+  for (const intent in intents) {
+    const match = stringSimilarity.findBestMatch(q, intents[intent]);
 
-      if (score > bestScore) {
-        bestScore = score;
-        bestIntent = intent.name;
-      }
-    });
-  });
+    if (match.bestMatch.rating > bestScore) {
+      bestScore = match.bestMatch.rating;
+      bestIntent = intent;
+    }
+  }
 
-  return bestScore > 0.2 ? bestIntent : "unknown";
+  console.log(" Similarity Score:", bestScore);
+
+  return bestScore > 0.25 ? bestIntent : "UNKNOWN";
 }
 
-// -----------------------------
-// 🧠 ENTITY EXTRACTION
-// -----------------------------
-function extractEntities(question) {
-  const numbers = question.match(/\d+/g);
+function extractEntities(q) {
+  const numberMatch = q.match(/\d+/);
+
   return {
-    days: numbers ? parseInt(numbers[0]) : null
+    day: numberMatch ? parseInt(numberMatch[0]) : null
   };
 }
 
-// -----------------------------
-// 🧠 RESPONSE GENERATOR
-// -----------------------------
-function generateResponse(intent, data, entities, insights) {
-  try {
-    switch (intent) {
+function generateResponse(intent) {
+  switch (intent) {
+    case "UNKNOWN":
+      return " I didn’t understand. Try asking about sales, agents, or trends.";
 
-      case "highest_sales": {
-        const res = insights.highestSalesDay(data);
-        return `📈 Day ${res.day} had highest sales ₹${res.revenue}`;
-      }
-
-      case "lowest_sales": {
-        const res = insights.lowestSalesDay(data);
-        return `📉 Day ${res.day} had lowest sales ₹${res.revenue}`;
-      }
-
-      case "top_agent": {
-        const res = insights.topAgent(data);
-        return `🏆 Top agent is ${res.agent} with ₹${res.revenue}`;
-      }
-
-      case "trend": {
-        const trend = insights.getTrend(data);
-        return `📊 Sales trend is ${trend}`;
-      }
-
-      case "high_value": {
-        const orders = insights.highValueOrders(data);
-        return `💰 Found ${orders.length} high value orders`;
-      }
-
-      case "forecast": {
-        const days = entities.days || 3;
-
-        // 🔥 simple prediction (avg based)
-        const avg =
-          data.reduce((sum, d) => sum + d.revenue, 0) / data.length;
-
-        const prediction = Math.round(avg * days);
-
-        return `🔮 Estimated revenue for next ${days} days is ₹${prediction}`;
-      }
-
-      default:
-        return "🤖 I didn’t understand. Try asking about sales, agents, or trends.";
-    }
-  } catch (err) {
-    console.error("AI ERROR:", err);
-    return "⚠️ Error generating response";
+    default:
+      return "Processing your request...";
   }
 }
 

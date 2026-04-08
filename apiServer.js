@@ -3,7 +3,7 @@ const app = express();
 
 const PORT = 4000;
 
-// 🔥 Your actual data structure
+
 const response = {
   status: 200,
   message: "Form data fetched successfully",
@@ -53,12 +53,12 @@ const response = {
   ]
 };
 
-// 🔹 Endpoint
+
 app.get("/data", (req, res) => {
   res.json(response);
 });
 
-// 🔹 Start API
+
 app.listen(PORT, () => {
   console.log(`📡 API running on http://127.0.0.1:${PORT}/data`);
 });
