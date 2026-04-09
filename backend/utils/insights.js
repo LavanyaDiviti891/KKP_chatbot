@@ -1,17 +1,21 @@
 function highestSalesDay(data) {
-  if (!data.length) return { day: "-", revenue: 0 };
+  if (!data || data.length === 0) return ["N/A", 0];
 
-  let max = data[0];
+  let max = -Infinity;
+  let bestDay = "N/A";
 
   data.forEach(d => {
-    if (d.revenue > max.revenue) max = d;
+    if (d.revenue > max) {
+      max = d.revenue;
+      bestDay = d.day; // ✅ fixed: was d.date in the duplicate override
+    }
   });
 
-  return max;
+  return [bestDay, max]; // ✅ returns array so server.js can destructure as [day, value]
 }
 
 function lowestSalesDay(data) {
-  if (!data.length) return { day: "-", revenue: 0 };
+  if (!data || data.length === 0) return ["N/A", 0];
 
   let min = data[0];
 
@@ -19,11 +23,11 @@ function lowestSalesDay(data) {
     if (d.revenue < min.revenue) min = d;
   });
 
-  return min;
+  return [min.day, min.revenue]; // ✅ fixed: was returning object, now returns array
 }
 
 function topAgent(data) {
-  if (!data.length) return { agent: "-", revenue: 0 };
+  if (!data || data.length === 0) return ["N/A", 0];
 
   const agentMap = {};
 
@@ -31,59 +35,49 @@ function topAgent(data) {
     agentMap[d.agent] = (agentMap[d.agent] || 0) + d.revenue;
   });
 
-  let top = { agent: "-", revenue: 0 };
+  let topName = "N/A";
+  let topRevenue = 0;
 
   for (let agent in agentMap) {
-    if (agentMap[agent] > top.revenue) {
-      top = { agent, revenue: agentMap[agent] };
+    if (agentMap[agent] > topRevenue) {
+      topRevenue = agentMap[agent];
+      topName = agent;
     }
   }
 
-  return top;
+  return [topName, topRevenue]; // ✅ fixed: was returning object, now returns array
 }
 
 function getTrend(data) {
-  if (data.length < 2) return "Not enough data";
+  if (!data || data.length < 2) return "Not enough data";
 
   const first = data[0].revenue;
   const last = data[data.length - 1].revenue;
 
-  if (last > first) return "increasing ";
-  if (last < first) return "decreasing ";
-  return "stable";
+  if (last > first) return "increasing 📈";
+  if (last < first) return "decreasing 📉";
+  return "stable ➡️";
 }
 
 function highValueOrders(data) {
-  return data.filter(d => d.revenue > 100000);
+  return data.filter(d => d.revenue > 100000).length; // ✅ returns count not array
 }
 
-function compareAgents(data, a1, a2) {
+function compareAgents(data) {
+  // ✅ fixed: no longer requires a1/a2 args — returns sorted array of [name, revenue] pairs
   const sum = {};
 
   data.forEach(d => {
-    sum[d.agent] = (sum[d.agent] || 0) + d.revenue;
-  });
-
-  return {
-    [a1]: sum[a1] || 0,
-    [a2]: sum[a2] || 0
-  };
-}
-function highestSalesDay(data) {
-  if (!data || data.length === 0) return [0, 0];
-
-  let max = -Infinity;
-  let bestDay = null;
-
-  data.forEach(d => {
-    if (d.revenue > max) {
-      max = d.revenue;
-      bestDay = d.date;
+    if (d.agent && d.agent !== "Unknown") {
+      sum[d.agent] = (sum[d.agent] || 0) + d.revenue;
     }
   });
 
-  return [bestDay, max];
+  return Object.entries(sum)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5); // top 5 agents
 }
+
 module.exports = {
   highestSalesDay,
   lowestSalesDay,
