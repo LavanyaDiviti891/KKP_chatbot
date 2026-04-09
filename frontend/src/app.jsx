@@ -42,7 +42,7 @@ export default function App() {
 
   return (
     <div style={{ width: "500px", margin: "auto", marginTop: "40px" }}>
-      <h2>💬 Sales Chatbot</h2>
+      <h2> Sales Chatbot</h2>
 
       <div
         style={{

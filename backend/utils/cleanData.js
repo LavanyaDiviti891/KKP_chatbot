@@ -21,14 +21,12 @@ function cleanQuality(q) {
 }
 
 function cleanData(data) {
-  return data
-    .filter(d => d.quantity && d.rate)
-    .map(d => ({
-      ...d,
-      agentName: d.agentName || "Unknown",
-      day: new Date(d.date).getDate(),
-      revenue: Number(d.quantity) * Number(d.rate)
-    }));
+  return data.map(d => ({
+    date: d.date,
+    revenue: (d.quantity || 0) * (d.rate || 0), 
+    status: d.status || "unknown",
+    agent: d.agent || "unknown"
+  }));
 }
 
 module.exports = { cleanData };
