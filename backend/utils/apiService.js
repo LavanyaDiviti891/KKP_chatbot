@@ -4,11 +4,11 @@ async function fetchAPIData() {
 
     const json = await res.json();
 
-    // 🔥 IMPORTANT: extract formData
+  
     return json.formData || [];
 
   } catch (err) {
-    console.error("❌ API FETCH ERROR:", err);
+    console.error("API FETCH ERROR:", err);
     return [];
   }
 }

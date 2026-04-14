@@ -56,24 +56,6 @@ git clone <your-repo-url>
 cd KKP_chatbot
 ```
 
----
-
-##  2. Install Backend Dependencies
-
-```
-npm install
-```
-
----
-
-## 3. Install Frontend Dependencies
-
-```
-cd frontend
-npm install
-```
-
----
 
 # Running the Project
 
@@ -82,6 +64,10 @@ npm install
 ---
 
 ##  Terminal 1 – Run API Server
+
+```
+npm install express
+```
 
 ```
 node apiServer.js
@@ -98,13 +84,21 @@ API running on http://127.0.0.1:4000/data
 ## Terminal 2 – Run Backend
 
 ```
-node backend/server.js
+cd KKP_chatbot/backend
+
+npm install express cors string-similarity
+
+npm install express
+```
+
+```
+node server.js
 ```
 
 Expected:
 
 ```
-Server running on http://127.0.0.1:5000
+Server running on http://127.0.0.1:5001
 ```
 
 ---
@@ -113,6 +107,9 @@ Server running on http://127.0.0.1:5000
 
 ```
 cd frontend
+
+npm install
+
 npm run dev
 ```
 

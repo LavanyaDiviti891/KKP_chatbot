@@ -60,5 +60,5 @@ app.get("/data", (req, res) => {
 
 
 app.listen(PORT, () => {
-  console.log(`📡 API running on http://127.0.0.1:${PORT}/data`);
+  console.log(`API running on http://127.0.0.1:${PORT}/data`);
 });
