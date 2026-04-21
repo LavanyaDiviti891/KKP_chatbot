@@ -99,7 +99,7 @@ function detectIntent(q) {
   if (q.includes("pending")) return "PENDING_ORDERS";
 
   // 15. Totals
-  if ((q.includes("total") || q.includes("overall") || q.includes("sum") || q.includes("grand")) && !q.includes("agent")) return "TOTAL_REVENUE";
+  if ((q.includes("total revenue") || q.includes("overall revenue") || q.includes("grand total") || (q.includes("sum") && !q.includes("summary"))) && !q.includes("agent")) return "TOTAL_REVENUE";
   if (q.includes("how many orders") || q.includes("count orders") || q.includes("number of orders")) return "ORDER_COUNT";
 
   // 16. Trend
