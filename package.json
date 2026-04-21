@@ -12,5 +12,18 @@
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "sqlite3": "^6.0.1"
-  }
+  },
+  "description": "A fully local, rule-based sales analytics chatbot that answers natural language questions about sales data, agent performance, order status, and provides strategic business recommendations.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LavanyaDiviti891/KKP_chatbot.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/LavanyaDiviti891/KKP_chatbot/issues"
+  },
+  "homepage": "https://github.com/LavanyaDiviti891/KKP_chatbot#readme"
 }
